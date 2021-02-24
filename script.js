@@ -17,7 +17,7 @@ const imageItems = galleryList
   </a>
 </li>`;
   })
-  .reduce((acc, item) => acc + item, '');
+  .join('');
 
 const refs = {
   gallery: document.querySelector('.js-gallery'),
@@ -32,22 +32,27 @@ refs.gallery.addEventListener('click', onGalleryClick);
 refs.closeBtn.addEventListener('click', closeLightbox);
 refs.lightboxOverlay.addEventListener('click', closeLightbox);
 
+let currentIndex = null;
 function onGalleryClick(event) {
   event.preventDefault();
   if (event.target.nodeName !== 'IMG') {
     return;
   }
-  openLightbox();
+
   const largeImgUrl = event.target.dataset.source;
   const largeImgAlt = event.target.alt;
   const largeImgIndex = event.target.dataset.index;
-  openLargeImg(largeImgUrl, largeImgAlt, largeImgIndex);
+  currentIndex = +largeImgIndex;
+  openLightbox(largeImgUrl, largeImgAlt, largeImgIndex);
 }
 
-function openLightbox() {
+function openLightbox(url, alt, index) {
   window.addEventListener('keydown', onEscKeyPress);
   window.addEventListener('keydown', onArrowKeyPress);
   refs.lightbox.classList.add('is-open');
+  refs.lightboxImage.src = url;
+  refs.lightboxImage.alt = alt;
+  refs.lightboxImage.dataset.index = index;
 }
 
 function closeLightbox() {
@@ -58,12 +63,6 @@ function closeLightbox() {
   refs.lightboxImage.alt = '';
 }
 
-function openLargeImg(url, alt, index) {
-  refs.lightboxImage.src = url;
-  refs.lightboxImage.alt = alt;
-  refs.lightboxImage.dataset.index = index;
-}
-
 function onEscKeyPress(event) {
   if (event.code === 'Escape') {
     closeLightbox();
@@ -71,15 +70,19 @@ function onEscKeyPress(event) {
 }
 
 function onArrowKeyPress(event) {
-  let index = Number(refs.lightboxImage.dataset.index);
-  const maxCount = galleryList.length - 1;
-  const minCount = 0;
-  if (event.code === 'ArrowRight' && !(index >= maxCount)) {
-    refs.lightboxImage.src = galleryList[index + 1].original;
-    refs.lightboxImage.dataset.index = index + 1;
+  if (event.code === 'ArrowRight') {
+    goToRightElement();
   }
-  if (event.code === 'ArrowLeft' && !(index <= minCount)) {
-    refs.lightboxImage.src = galleryList[index - 1].original;
-    refs.lightboxImage.dataset.index = index - 1;
+  if (event.code === 'ArrowLeft') {
+    goToLeftElement();
   }
+}
+
+function goToRightElement() {
+  currentIndex = currentIndex === galleryList.length - 1 ? 0 : currentIndex + 1;
+  refs.lightboxImage.src = galleryList[currentIndex].original;
+}
+function goToLeftElement() {
+  currentIndex = currentIndex === 0 ? galleryList.length - 1 : currentIndex - 1;
+  refs.lightboxImage.src = galleryList[currentIndex].original;
 }
